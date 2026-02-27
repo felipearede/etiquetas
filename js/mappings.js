@@ -86,6 +86,7 @@ function renderMappingList() {
         </div>
         <div class="mapping-item-actions">
           <button class="btn btn-small btn-secondary" onclick="openMappingEditor('${m.id}')">Editar</button>
+          <button class="btn btn-small btn-secondary" onclick="duplicateMapping('${m.id}')">Duplicar</button>
           <button class="btn btn-small btn-danger" onclick="confirmDeleteMapping('${m.id}')">Excluir</button>
         </div>
       </div>
@@ -93,6 +94,17 @@ function renderMappingList() {
   }
 
   document.getElementById('btn-new-mapping').onclick = () => openMappingEditor(null);
+}
+
+async function duplicateMapping(id) {
+  const original = App.mappings.find(x => x.id === id);
+  if (!original) return;
+  const copy = JSON.parse(JSON.stringify(original));
+  copy.name = original.name + ' - cópia';
+  copy.fields.forEach(f => { f.id = generateId(); });
+  await createMapping(copy);
+  renderMappingList();
+  showNotification('Mapeamento duplicado', 'success');
 }
 
 function confirmDeleteMapping(id) {
