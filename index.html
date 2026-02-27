@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Etiquetas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Gerador de Etiquetas</h1>
+    <button id="btn-mappings" class="btn btn-secondary">Mapeamentos</button>
+  </header>
+
+  <nav class="steps">
+    <div class="step active" data-step="upload">1. Upload CSV</div>
+    <div class="step" data-step="match">2. Verificar Produtos</div>
+    <div class="step" data-step="fill">3. Preencher Campos</div>
+    <div class="step" data-step="preview">4. Exportar</div>
+  </nav>
+
+  <main>
+    <!-- ETAPA 1: Upload -->
+    <section id="step-upload" class="step-content active">
+      <div id="drop-zone" class="drop-zone">
+        <p>Arraste o arquivo CSV aqui ou</p>
+        <label class="btn btn-primary">
+          Escolher arquivo
+          <input type="file" id="csv-input" accept=".csv" hidden>
+        </label>
+      </div>
+      <div id="csv-preview" class="hidden">
+        <h3>Dados do CSV (<span id="csv-count">0</span> linhas)</h3>
+        <div class="table-wrap">
+          <table id="csv-table"></table>
+        </div>
+        <div class="actions">
+          <button id="btn-process" class="btn btn-primary">Processar</button>
+          <button id="btn-clear-csv" class="btn btn-secondary">Limpar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ETAPA 2: Verificar Produtos -->
+    <section id="step-match" class="step-content hidden">
+      <h3>Verificar Produtos</h3>
+      <p id="match-summary"></p>
+      <div class="table-wrap">
+        <table id="match-table"></table>
+      </div>
+      <div class="actions">
+        <button id="btn-back-upload" class="btn btn-secondary">Voltar</button>
+        <button id="btn-continue-fill" class="btn btn-primary" disabled>Continuar</button>
+      </div>
+    </section>
+
+    <!-- ETAPA 3: Preencher Campos -->
+    <section id="step-fill" class="step-content hidden">
+      <h3>Preencher Campos</h3>
+      <div id="fill-groups"></div>
+      <div class="actions">
+        <button id="btn-back-match" class="btn btn-secondary">Voltar</button>
+        <button id="btn-generate" class="btn btn-primary">Gerar Etiquetas</button>
+      </div>
+    </section>
+
+    <!-- ETAPA 4: Exportar -->
+    <section id="step-preview" class="step-content hidden">
+      <h3>Etiquetas Geradas (<span id="label-count">0</span>)</h3>
+      <div id="labels-preview" class="labels-grid"></div>
+      <div class="actions">
+        <button id="btn-back-fill" class="btn btn-secondary">Voltar</button>
+        <button id="btn-export-csv" class="btn btn-primary">Exportar CSV</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- OVERLAY: Gerenciar Mapeamentos -->
+  <div id="mapping-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <div class="overlay-header">
+        <h2>Mapeamentos</h2>
+        <button id="btn-close-overlay" class="btn-close">&times;</button>
+      </div>
+      <div class="overlay-body">
+        <div id="mapping-list"></div>
+        <button id="btn-new-mapping" class="btn btn-primary">Novo Mapeamento</button>
+        <hr>
+        <button id="btn-export-json" class="btn btn-secondary btn-small">Exportar JSON (para salvar no projeto)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Criar/Editar Mapeamento -->
+  <div id="mapping-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Novo Mapeamento</h3>
+        <button id="btn-close-modal" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nome do mapeamento</label>
+          <input type="text" id="map-name" placeholder="Ex: THC In Natura">
+        </div>
+        <div class="form-group">
+          <label>Texto para buscar no produto (pattern)</label>
+          <input type="text" id="map-pattern" placeholder="Ex: Inflorescencia Alto THC">
+          <small>O sistema busca este texto dentro da coluna "prod" do CSV (ignora maiúsculas/minúsculas)</small>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Largura (mm)</label>
+            <input type="number" id="map-width" value="100" min="10">
+          </div>
+          <div class="form-group">
+            <label>Altura (mm)</label>
+            <input type="number" id="map-height" value="100" min="10">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Campos da etiqueta</label>
+          <div id="fields-editor"></div>
+          <button id="btn-add-field" class="btn btn-secondary btn-small">+ Adicionar campo</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-mapping" class="btn btn-secondary">Cancelar</button>
+        <button id="btn-save-mapping" class="btn btn-primary">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/mappings.js"></script>
+  <script src="js/csv-parser.js"></script>
+  <script src="js/labels.js"></script>
+  <script src="js/export.js"></script>
+</body>
+</html>

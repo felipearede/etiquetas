@@ -1,0 +1,29 @@
+[
+  {
+    "id": "thc_in_natura",
+    "name": "THC In Natura",
+    "pattern": "Inflorescencia Alto THC",
+    "labelSize": { "width": 100, "height": 100 },
+    "fields": [
+      { "id": "f1", "type": "fixed", "label": "", "value": "THC IN NATURA" },
+      { "id": "f2", "type": "user_batch", "label": "Volume", "placeholder": "x gramas" },
+      { "id": "f3", "type": "user_batch", "label": "GENÉTICA", "placeholder": "ex: Sativa" },
+      { "id": "f4", "type": "auto", "label": "Data de produção", "autoType": "today" },
+      { "id": "f5", "type": "auto", "label": "Validade", "autoType": "today_plus_months", "monthsToAdd": 3 }
+    ]
+  },
+  {
+    "id": "cbd_accura_10",
+    "name": "CBD Accura 10%",
+    "pattern": "CBD ACCURA 3000MG",
+    "labelSize": { "width": 50, "height": 30 },
+    "fields": [
+      { "id": "f1", "type": "fixed", "label": "", "value": "CBD Accura 10%" },
+      { "id": "f2", "type": "fixed", "label": "Volume", "value": "30ml" },
+      { "id": "f3", "type": "fixed", "label": "CBD", "value": "3000mg" },
+      { "id": "f4", "type": "fixed", "label": "Outros Canabinoides", "value": "traços" },
+      { "id": "f5", "type": "auto", "label": "Data de produção", "autoType": "today" },
+      { "id": "f6", "type": "fixed", "label": "", "value": "Válido por 3 meses" }
+    ]
+  }
+]
