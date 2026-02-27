@@ -1,61 +1,64 @@
 // === Carregar mapeamentos ===
 async function loadMappings() {
-  // Tenta carregar do arquivo mappings.json
+  try {
+    const resp = await fetch('/api/mappings');
+    if (resp.ok) {
+      App.mappings = await resp.json();
+      return;
+    }
+  } catch (e) {
+    console.warn('API indisponível, tentando mappings.json:', e);
+  }
+
+  // Fallback: carrega do arquivo estático
   try {
     const resp = await fetch('mappings.json');
     if (resp.ok) {
       App.mappings = await resp.json();
+      return;
     }
   } catch (e) {
     console.warn('Não foi possível carregar mappings.json:', e);
-    App.mappings = [];
   }
 
-  // Mescla com overrides do localStorage
-  const local = localStorage.getItem('etiquetas_mappings_local');
-  if (local) {
-    try {
-      const localMappings = JSON.parse(local);
-      // Adiciona mapeamentos locais que não existem no JSON
-      localMappings.forEach(lm => {
-        const exists = App.mappings.find(m => m.id === lm.id);
-        if (!exists) {
-          lm._local = true;
-          App.mappings.push(lm);
-        }
-      });
-    } catch (e) {
-      console.warn('Erro ao carregar mapeamentos locais:', e);
-    }
-  }
+  App.mappings = [];
 }
 
-function saveLocalMappings() {
-  const localOnly = App.mappings.filter(m => m._local);
-  localStorage.setItem('etiquetas_mappings_local', JSON.stringify(localOnly));
+async function saveMappingsToServer() {
+  try {
+    const resp = await fetch('/api/mappings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(App.mappings)
+    });
+    if (!resp.ok) throw new Error('Erro ao salvar');
+    return true;
+  } catch (e) {
+    console.error('Erro ao salvar mapeamentos:', e);
+    showNotification('Erro ao salvar no servidor', 'error');
+    return false;
+  }
 }
 
 // === CRUD ===
-function createMapping(data) {
+async function createMapping(data) {
   data.id = generateId();
-  data._local = true;
   App.mappings.push(data);
-  saveLocalMappings();
+  await saveMappingsToServer();
   return data;
 }
 
-function updateMapping(id, data) {
+async function updateMapping(id, data) {
   const idx = App.mappings.findIndex(m => m.id === id);
   if (idx === -1) return;
   data.id = id;
-  data._local = App.mappings[idx]._local || false;
   App.mappings[idx] = data;
-  if (data._local) saveLocalMappings();
+  await saveMappingsToServer();
 }
 
-function deleteMapping(id) {
+async function deleteMapping(id) {
   App.mappings = App.mappings.filter(m => m.id !== id);
-  saveLocalMappings();
+  await saveMappingsToServer();
 }
 
 // === Pattern matching ===
@@ -77,7 +80,7 @@ function renderMappingList() {
     container.innerHTML = App.mappings.map(m => `
       <div class="mapping-item">
         <div class="mapping-item-info">
-          <div class="mapping-item-name">${escapeHtml(m.name)} ${m._local ? '<span class="badge badge-skip">local</span>' : ''}</div>
+          <div class="mapping-item-name">${escapeHtml(m.name)}</div>
           <div class="mapping-item-pattern">Busca: "${escapeHtml(m.pattern)}"</div>
           <div class="mapping-item-size">${m.labelSize.width}x${m.labelSize.height}mm | ${m.fields.length} campos</div>
         </div>
@@ -202,7 +205,7 @@ function removeFieldFromEditor(index) {
   renderFieldsEditor();
 }
 
-function saveMappingFromModal() {
+async function saveMappingFromModal() {
   const name = document.getElementById('map-name').value.trim();
   const pattern = document.getElementById('map-pattern').value.trim();
   const width = parseInt(document.getElementById('map-width').value);
@@ -225,10 +228,10 @@ function saveMappingFromModal() {
   };
 
   if (editingMappingId) {
-    updateMapping(editingMappingId, data);
+    await updateMapping(editingMappingId, data);
     showNotification('Mapeamento atualizado', 'success');
   } else {
-    createMapping(data);
+    await createMapping(data);
     showNotification('Mapeamento criado', 'success');
   }
 
@@ -243,12 +246,7 @@ function saveMappingFromModal() {
 
 // === Exportar JSON ===
 function exportMappingsJson() {
-  const clean = App.mappings.map(m => {
-    const c = { ...m };
-    delete c._local;
-    return c;
-  });
-  const json = JSON.stringify(clean, null, 2);
+  const json = JSON.stringify(App.mappings, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -256,5 +254,5 @@ function exportMappingsJson() {
   a.download = 'mappings.json';
   a.click();
   URL.revokeObjectURL(url);
-  showNotification('JSON exportado! Substitua o mappings.json no projeto e faça deploy.', 'info');
+  showNotification('JSON exportado!', 'info');
 }
