@@ -93,7 +93,6 @@ function renderMappingList() {
   }
 
   document.getElementById('btn-new-mapping').onclick = () => openMappingEditor(null);
-  document.getElementById('btn-export-json').onclick = exportMappingsJson;
 }
 
 function confirmDeleteMapping(id) {
