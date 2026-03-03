@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where node)",
+      "Bash(where npm)",
+      "Bash(where python)",
+      "Bash(where py)",
+      "Bash(gh auth status)",
+      "Bash(git init)",
+      "Bash(git add index.html style.css mappings.json js/app.js js/mappings.js js/csv-parser.js js/labels.js js/export.js)",
+      "Bash(gh repo create etiquetas --public --source=. --push)",
+      "Bash(where vercel)",
+      "Bash(where npx)",
+      "Bash(vercel whoami)",
+      "Bash(vercel --yes --prod)",
+      "Bash(git add package.json api/mappings.js js/mappings.js index.html)",
+      "Bash(git commit:*)",
+      "Bash(git push origin master)",
+      "Bash(vercel stores ls)",
+      "Bash(vercel env ls)",
+      "Bash(vercel kv)",
+      "Bash(vercel help)",
+      "Bash(vercel project ls)",
+      "Bash(vercel curl /v1/storage/stores?projectId=prj_MI7Gy6EwyvgTwSkNt7ngO4BtOQDP --team=team_dxEa9jqV2AAAWtqSjiQBQrsB)",
+      "Bash(vercel integration add kv)",
+      "Bash(vercel integration ls)",
+      "Bash(vercel whoami --token)",
+      "Bash(git add package.json api/mappings.js)",
+      "Bash(vercel ls)",
+      "Bash(vercel --prod --yes)",
+      "Bash(curl -s \"https://etiquetas-seven.vercel.app/api/mappings\")",
+      "Bash(curl -s -X POST \"https://etiquetas-seven.vercel.app/api/mappings\" -H \"Content-Type: application/json\" -d @\"C:/Users/feare/Desktop/programacao/etiquetas/mappings.json\")",
+      "Bash(git add js/mappings.js)"
+    ]
+  }
+}

@@ -96,9 +96,10 @@ function renderCSVTable() {
   const table = document.getElementById('csv-table');
   document.getElementById('csv-count').textContent = App.csvRows.length;
 
-  let html = '<thead><tr><th>#</th><th>Nome</th><th>Produto</th></tr></thead><tbody>';
+  let html = '<thead><tr><th></th><th>#</th><th>Nome</th><th>Produto</th></tr></thead><tbody>';
   App.csvRows.forEach((row, i) => {
     html += `<tr>
+      <td><button class="btn-remove-row" data-index="${i}" title="Remover linha">&times;</button></td>
       <td>${i + 1}</td>
       <td>${escapeHtml(row.addressPersonName || '-')}</td>
       <td>${escapeHtml(row.prod || '-')}</td>
@@ -106,6 +107,20 @@ function renderCSVTable() {
   });
   html += '</tbody>';
   table.innerHTML = html;
+
+  // Attach remove handlers
+  table.querySelectorAll('.btn-remove-row').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const index = parseInt(btn.dataset.index, 10);
+      App.csvRows.splice(index, 1);
+      renderCSVTable();
+      showNotification('Linha removida', 'info');
+      if (App.csvRows.length === 0) {
+        document.getElementById('csv-preview').classList.add('hidden');
+        document.getElementById('drop-zone').style.display = '';
+      }
+    });
+  });
 
   document.getElementById('drop-zone').style.display = 'none';
   document.getElementById('csv-preview').classList.remove('hidden');
