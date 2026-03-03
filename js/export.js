@@ -70,9 +70,10 @@ function printLabels() {
     return `<div class="etiqueta" style="width:${w}mm; height:${h}mm;">
       <div class="etiqueta-content">
         ${fieldsHtml}
-      </div>
-      <div class="etiqueta-footer">
-        <span class="etiqueta-nome">${escapeHtml(lbl.addressPersonName)}</span>
+        <div class="field field-nome">
+          <span class="field-label">Paciente:</span>
+          <span class="field-value">${escapeHtml(lbl.addressPersonName)}</span>
+        </div>
       </div>
     </div>`;
   }).join('\n');
