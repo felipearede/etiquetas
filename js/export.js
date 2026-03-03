@@ -168,7 +168,7 @@ function printLabels() {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 3mm;
+      padding: 2mm;
       overflow: hidden;
     }
 
@@ -177,43 +177,54 @@ function printLabels() {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 1.5mm;
+      gap: 1mm;
+      overflow: hidden;
     }
 
     .field {
       display: flex;
       align-items: baseline;
-      gap: 2mm;
+      gap: 1mm;
+      overflow: hidden;
     }
 
     .field-label {
-      font-size: 7pt;
+      font-size: 2mm;
       font-weight: bold;
       color: #333;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .field-value {
-      font-size: 8pt;
+      font-size: 2.2mm;
       color: #111;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .field-value-solo {
-      font-size: 10pt;
+      font-size: 3mm;
       font-weight: bold;
       text-align: center;
       width: 100%;
     }
 
     .etiqueta-footer {
-      border-top: 0.5px solid #ccc;
-      padding-top: 1mm;
-      margin-top: 1mm;
+      border-top: 0.3px solid #ccc;
+      padding-top: 0.5mm;
+      margin-top: 0.5mm;
+      overflow: hidden;
     }
 
     .etiqueta-nome {
-      font-size: 6pt;
+      font-size: 1.5mm;
       color: #666;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
     }
 
     /* ======= ESTILOS DE IMPRESSÃO - IMPRESSORA DE ROLO ======= */
