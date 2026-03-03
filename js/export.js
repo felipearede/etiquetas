@@ -31,15 +31,245 @@ function renderLabelPreviews() {
   }).join('');
 }
 
-// === Exportação CSV ===
+// === Impressão Direta de Etiquetas ===
 
+function printLabels() {
+  if (App.generatedLabels.length === 0) {
+    showNotification('Nenhuma etiqueta para imprimir', 'error');
+    return;
+  }
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    showNotification('Pop-up bloqueado! Permita pop-ups para imprimir.', 'error');
+    return;
+  }
+
+  // Group labels by size for page setup
+  const labelsHtml = App.generatedLabels.map((lbl, i) => {
+    const w = lbl.labelSize.width;
+    const h = lbl.labelSize.height;
+
+    const fieldsHtml = lbl.resolvedFields.map(f => {
+      if (f.label) {
+        return `<div class="field">
+          <span class="field-label">${escapeHtml(f.label)}:</span>
+          <span class="field-value">${escapeHtml(f.value)}</span>
+        </div>`;
+      } else {
+        return `<div class="field">
+          <span class="field-value field-value-solo">${escapeHtml(f.value)}</span>
+        </div>`;
+      }
+    }).join('');
+
+    return `<div class="etiqueta" style="width:${w}mm; height:${h}mm;">
+      <div class="etiqueta-content">
+        ${fieldsHtml}
+      </div>
+      <div class="etiqueta-footer">
+        <span class="etiqueta-nome">${escapeHtml(lbl.addressPersonName)}</span>
+      </div>
+    </div>`;
+  }).join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Imprimir Etiquetas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+
+    .controls {
+      background: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .controls h2 {
+      font-size: 18px;
+      color: #333;
+      margin-right: auto;
+    }
+
+    .controls button {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-print {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-print:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-close {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .btn-close:hover {
+      background: #d1d5db;
+    }
+
+    .info {
+      font-size: 13px;
+      color: #666;
+      width: 100%;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .info strong { color: #333; }
+
+    .labels-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .etiqueta {
+      background: #fff;
+      border: 1px dashed #aaa;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3mm;
+      overflow: hidden;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .etiqueta-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.5mm;
+    }
+
+    .field {
+      display: flex;
+      align-items: baseline;
+      gap: 2mm;
+    }
+
+    .field-label {
+      font-size: 7pt;
+      font-weight: bold;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    .field-value {
+      font-size: 8pt;
+      color: #111;
+    }
+
+    .field-value-solo {
+      font-size: 10pt;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+    }
+
+    .etiqueta-footer {
+      border-top: 0.5px solid #ccc;
+      padding-top: 1mm;
+      margin-top: 1mm;
+    }
+
+    .etiqueta-nome {
+      font-size: 6pt;
+      color: #666;
+    }
+
+    /* ======= PRINT STYLES ======= */
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .controls {
+        display: none !important;
+      }
+
+      .labels-container {
+        gap: 0;
+        justify-content: flex-start;
+      }
+
+      .etiqueta {
+        border: none;
+        margin: 0;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        page-break-after: always;
+      }
+
+      /* If you want multiple labels per page (same size), remove page-break-after: always
+         and use the commented block below instead */
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <h2>🏷️ ${App.generatedLabels.length} etiqueta(s) para imprimir</h2>
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimir (Ctrl+P)</button>
+    <button class="btn-close" onclick="window.close()">✕ Fechar</button>
+    <div class="info">
+      <strong>Dica:</strong> Na janela de impressão, configure:<br>
+      • <strong>Margens:</strong> Nenhuma (ou Mínima)<br>
+      • <strong>Escala:</strong> 100% (sem ajustar à página)<br>
+      • <strong>Tamanho do papel:</strong> Ajuste conforme o tamanho da sua etiqueta
+    </div>
+  </div>
+
+  <div class="labels-container">
+    ${labelsHtml}
+  </div>
+</body>
+</html>`;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+
+  showNotification('Janela de impressão aberta!', 'success');
+}
+
+// Mantém exportCSV como opção secundária
 function exportToCSV() {
   if (App.generatedLabels.length === 0) {
     showNotification('Nenhuma etiqueta para exportar', 'error');
     return;
   }
 
-  // Coleta todos os nomes de campos únicos
   const allFieldLabels = new Set();
   App.generatedLabels.forEach(lbl => {
     lbl.resolvedFields.forEach((f, i) => {
@@ -50,10 +280,8 @@ function exportToCSV() {
 
   const fieldColumns = [...allFieldLabels];
 
-  // Monta cabeçalho
   const headers = ['orderId', 'addressPersonName', 'produto_csv', 'mapeamento', 'largura_mm', 'altura_mm', ...fieldColumns];
 
-  // Monta linhas
   const rows = App.generatedLabels.map(lbl => {
     const base = [
       lbl.orderId,
@@ -72,7 +300,6 @@ function exportToCSV() {
     return [...base, ...fieldValues];
   });
 
-  // Gera CSV com Papa Parse
   const csvContent = Papa.unparse({
     fields: headers,
     data: rows
@@ -80,7 +307,6 @@ function exportToCSV() {
     delimiter: ';'
   });
 
-  // Download
   const bom = '\uFEFF';
   const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);

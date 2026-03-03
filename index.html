@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerador de Etiquetas</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <header>
     <h1>Gerador de Etiquetas</h1>
@@ -16,7 +18,7 @@
     <div class="step active" data-step="upload">1. Upload CSV</div>
     <div class="step" data-step="match">2. Verificar Produtos</div>
     <div class="step" data-step="fill">3. Preencher Campos</div>
-    <div class="step" data-step="preview">4. Exportar</div>
+    <div class="step" data-step="preview">4. Imprimir</div>
   </nav>
 
   <main>
@@ -70,7 +72,8 @@
       <div id="labels-preview" class="labels-grid"></div>
       <div class="actions">
         <button id="btn-back-fill" class="btn btn-secondary">Voltar</button>
-        <button id="btn-export-csv" class="btn btn-primary">Exportar CSV</button>
+        <button id="btn-export-csv" class="btn btn-secondary">Exportar CSV</button>
+        <button id="btn-print-labels" class="btn btn-primary">🖨️ Imprimir Etiquetas</button>
       </div>
     </section>
   </main>
@@ -136,4 +139,5 @@
   <script src="js/labels.js"></script>
   <script src="js/export.js"></script>
 </body>
+
 </html>

@@ -109,6 +109,7 @@ function setupNavigationHandlers() {
   });
 
   document.getElementById('btn-export-csv').addEventListener('click', exportToCSV);
+  document.getElementById('btn-print-labels').addEventListener('click', printLabels);
 
   document.getElementById('btn-clear-csv').addEventListener('click', () => {
     App.csvRows = [];
