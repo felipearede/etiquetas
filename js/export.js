@@ -45,7 +45,11 @@ function printLabels() {
     return;
   }
 
-  // Group labels by size for page setup
+  // Determine the label size (use the first label's size for @page)
+  // For roll printers, all labels on a roll are typically the same size
+  const defaultW = App.generatedLabels[0].labelSize.width;
+  const defaultH = App.generatedLabels[0].labelSize.height;
+
   const labelsHtml = App.generatedLabels.map((lbl, i) => {
     const w = lbl.labelSize.width;
     const h = lbl.labelSize.height;
@@ -79,6 +83,12 @@ function printLabels() {
   <meta charset="UTF-8">
   <title>Imprimir Etiquetas</title>
   <style>
+    /* === @page: define o tamanho da "folha" como o tamanho da etiqueta === */
+    @page {
+      size: ${defaultW}mm ${defaultH}mm;
+      margin: 0;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -160,8 +170,6 @@ function printLabels() {
       justify-content: space-between;
       padding: 3mm;
       overflow: hidden;
-      page-break-inside: avoid;
-      break-inside: avoid;
     }
 
     .etiqueta-content {
@@ -208,12 +216,13 @@ function printLabels() {
       color: #666;
     }
 
-    /* ======= PRINT STYLES ======= */
+    /* ======= ESTILOS DE IMPRESSÃO - IMPRESSORA DE ROLO ======= */
     @media print {
       body {
         background: none;
         padding: 0;
         margin: 0;
+        width: ${defaultW}mm;
       }
 
       .controls {
@@ -221,20 +230,27 @@ function printLabels() {
       }
 
       .labels-container {
+        display: block;
         gap: 0;
-        justify-content: flex-start;
       }
 
       .etiqueta {
         border: none;
         margin: 0;
-        page-break-inside: avoid;
-        break-inside: avoid;
+        padding: 2mm;
+        width: ${defaultW}mm !important;
+        height: ${defaultH}mm !important;
         page-break-after: always;
+        page-break-inside: avoid;
+        break-after: page;
+        break-inside: avoid;
       }
 
-      /* If you want multiple labels per page (same size), remove page-break-after: always
-         and use the commented block below instead */
+      /* Remove page break da última etiqueta */
+      .etiqueta:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
     }
   </style>
 </head>
@@ -244,10 +260,11 @@ function printLabels() {
     <button class="btn-print" onclick="window.print()">🖨️ Imprimir (Ctrl+P)</button>
     <button class="btn-close" onclick="window.close()">✕ Fechar</button>
     <div class="info">
-      <strong>Dica:</strong> Na janela de impressão, configure:<br>
-      • <strong>Margens:</strong> Nenhuma (ou Mínima)<br>
-      • <strong>Escala:</strong> 100% (sem ajustar à página)<br>
-      • <strong>Tamanho do papel:</strong> Ajuste conforme o tamanho da sua etiqueta
+      <strong>Tamanho da etiqueta:</strong> ${defaultW}mm × ${defaultH}mm<br>
+      <strong>Dica:</strong> Na janela de impressão, verifique se:<br>
+      • A impressora selecionada é a <strong>ELGIN</strong><br>
+      • <strong>Margens:</strong> Nenhuma<br>
+      • <strong>Escala:</strong> 100% (não ajustar à página)
     </div>
   </div>
 
