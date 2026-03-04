@@ -171,7 +171,7 @@ function printLabels() {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 2.5mm;
+      padding: 2mm;
       overflow: hidden;
     }
 
@@ -180,7 +180,7 @@ function printLabels() {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 1mm;
+      gap: 0.8mm;
       overflow: hidden;
     }
 
@@ -192,19 +192,19 @@ function printLabels() {
     }
 
     .field-label {
-      font-size: 2.5mm;
+      font-size: 2.2mm;
       font-weight: bold;
       color: #333;
       flex-shrink: 0;
     }
 
     .field-value {
-      font-size: 2.8mm;
+      font-size: 2.4mm;
       color: #111;
     }
 
     .field-value-solo {
-      font-size: 3.5mm;
+      font-size: 3mm;
       font-weight: bold;
       text-align: center;
       width: 100%;
@@ -251,7 +251,7 @@ function printLabels() {
       .etiqueta {
         border: none;
         margin: 0;
-        padding: 2.5mm;
+        padding: 2mm;
         width: ${defaultW}mm !important;
         height: ${defaultH}mm !important;
         page-break-after: always;
