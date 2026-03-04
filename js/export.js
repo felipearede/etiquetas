@@ -146,15 +146,17 @@ function printLabels() {
       background: #d1d5db;
     }
 
-    .info {
-      font-size: 13px;
-      color: #666;
-      width: 100%;
-      margin-top: 4px;
-      line-height: 1.5;
+    .aviso-papel {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #92400e;
+      line-height: 1.6;
+      text-align: center;
     }
-
-    .info strong { color: #333; }
 
     .labels-container {
       display: flex;
@@ -237,7 +239,7 @@ function printLabels() {
         width: ${defaultW}mm;
       }
 
-      .controls {
+      .controls, .aviso-papel {
         display: none !important;
       }
 
@@ -269,20 +271,37 @@ function printLabels() {
 <body>
   <div class="controls">
     <h2>🏷️ ${App.generatedLabels.length} etiqueta(s) para imprimir</h2>
-    <button class="btn-print" onclick="window.print()">🖨️ Imprimir (Ctrl+P)</button>
+    <button class="btn-print" onclick="confirmarImpressao()">🖨️ Imprimir (Ctrl+P)</button>
     <button class="btn-close" onclick="window.close()">✕ Fechar</button>
-    <div class="info">
-      <strong>Tamanho da etiqueta:</strong> ${defaultW}mm × ${defaultH}mm<br>
-      <strong>Dica:</strong> Na janela de impressão, verifique se:<br>
-      • A impressora selecionada é a <strong>ELGIN</strong><br>
-      • <strong>Margens:</strong> Nenhuma<br>
-      • <strong>Escala:</strong> 100% (não ajustar à página)
-    </div>
+  </div>
+
+  <div class="aviso-papel">
+    ⚠️ <strong>IMPORTANTE:</strong> Na janela de impressão, selecione o tamanho do papel como <strong>"USER"</strong> (${defaultW}×${defaultH}mm).
+    <br>Impressora: <strong>ELGIN</strong> · Margens: <strong>Nenhuma</strong> · Escala: <strong>100%</strong>
   </div>
 
   <div class="labels-container">
     ${labelsHtml}
   </div>
+
+  <script>
+    function confirmarImpressao() {
+      var ok = confirm(
+        'ATENÇÃO — Antes de imprimir, verifique:\\n\\n' +
+        '✅ Tamanho do papel: "USER" (${defaultW}×${defaultH}mm)\\n' +
+        '✅ Impressora: ELGIN\\n' +
+        '✅ Margens: Nenhuma\\n' +
+        '✅ Escala: 100%\\n\\n' +
+        'Clique OK para abrir a impressão.'
+      );
+      if (ok) window.print();
+    }
+
+    // Auto-abre o alerta de confirmação quando a página carrega
+    window.addEventListener('load', function() {
+      setTimeout(confirmarImpressao, 500);
+    });
+  </script>
 </body>
 </html>`;
 
