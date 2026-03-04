@@ -232,11 +232,19 @@ function printLabels() {
 
     /* ======= ESTILOS DE IMPRESSÃO - IMPRESSORA DE ROLO ======= */
     @media print {
+      html {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
       body {
         background: none;
         padding: 0;
         margin: 0;
         width: ${defaultW}mm;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        zoom: 1;
       }
 
       .controls, .aviso-papel {
@@ -251,7 +259,7 @@ function printLabels() {
       .etiqueta {
         border: none;
         margin: 0;
-        padding: 2mm;
+        padding: 3mm;
         width: ${defaultW}mm !important;
         height: ${defaultH}mm !important;
         page-break-after: always;
