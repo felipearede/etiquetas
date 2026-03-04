@@ -172,7 +172,6 @@ function printLabels() {
       flex-direction: column;
       justify-content: space-between;
       padding: 3mm;
-      overflow: hidden;
     }
 
     .etiqueta-content {
@@ -180,35 +179,30 @@ function printLabels() {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 2mm;
-      overflow: hidden;
+      gap: 1.5mm;
     }
 
     .field {
       display: flex;
       align-items: baseline;
       gap: 1.5mm;
-      overflow: hidden;
+      flex-wrap: wrap;
     }
 
     .field-label {
-      font-size: 4mm;
+      font-size: 3mm;
       font-weight: bold;
       color: #333;
-      white-space: nowrap;
       flex-shrink: 0;
     }
 
     .field-value {
-      font-size: 4.5mm;
+      font-size: 3.2mm;
       color: #111;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     .field-value-solo {
-      font-size: 5.5mm;
+      font-size: 4mm;
       font-weight: bold;
       text-align: center;
       width: 100%;
@@ -218,15 +212,11 @@ function printLabels() {
       border-top: 0.3px solid #ccc;
       padding-top: 1mm;
       margin-top: 1mm;
-      overflow: hidden;
     }
 
     .etiqueta-nome {
-      font-size: 3mm;
+      font-size: 2.5mm;
       color: #666;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       display: block;
     }
 
