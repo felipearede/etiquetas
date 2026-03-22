@@ -185,6 +185,30 @@ tr:hover { background: #f9fafb; }
   gap: 16px;
   margin: 16px 0;
 }
+.group-header {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border-left: 4px solid #2563eb;
+  margin-top: 8px;
+}
+.group-header:first-child {
+  margin-top: 0;
+}
+.group-header-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.group-header-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+}
 .label-card {
   background: #fff;
   border: 1px solid #ddd;

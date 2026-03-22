@@ -9,7 +9,20 @@ function renderLabelPreviews() {
     return;
   }
 
-  container.innerHTML = App.generatedLabels.map((lbl, i) => {
+  let html = '';
+  let lastMappingName = null;
+
+  App.generatedLabels.forEach((lbl, i) => {
+    // Inserir cabeçalho de grupo quando muda o mapeamento
+    if (lbl.mappingName !== lastMappingName) {
+      const groupCount = App.generatedLabels.filter(l => l.mappingName === lbl.mappingName).length;
+      html += `<div class="group-header">
+        <span class="group-header-name">${escapeHtml(lbl.mappingName)}</span>
+        <span class="group-header-count">${groupCount} etiqueta(s)</span>
+      </div>`;
+      lastMappingName = lbl.mappingName;
+    }
+
     const fieldsHtml = lbl.resolvedFields.map(f => {
       if (f.label) {
         return `<div class="label-field">
@@ -23,12 +36,14 @@ function renderLabelPreviews() {
       }
     }).join('');
 
-    return `<div class="label-card">
+    html += `<div class="label-card">
       <div class="label-header">#${i + 1} - ${escapeHtml(lbl.addressPersonName)}</div>
       <div class="label-size">${lbl.labelSize.width}x${lbl.labelSize.height}mm</div>
       ${fieldsHtml}
     </div>`;
-  }).join('');
+  });
+
+  container.innerHTML = html;
 }
 
 // === Impressão Direta de Etiquetas ===
@@ -365,3 +380,333 @@ function exportToCSV() {
   URL.revokeObjectURL(url);
   showNotification('CSV exportado!', 'success');
 }
+
+// === Relatório de Resumo ===
+
+function printReport() {
+  if (App.generatedLabels.length === 0) {
+    showNotification('Nenhuma etiqueta para gerar relatório', 'error');
+    return;
+  }
+
+  const reportWindow = window.open('', '_blank');
+  if (!reportWindow) {
+    showNotification('Pop-up bloqueado! Permita pop-ups para gerar o relatório.', 'error');
+    return;
+  }
+
+  // Agrupar etiquetas por mapeamento
+  const groups = {};
+  App.generatedLabels.forEach(lbl => {
+    if (!groups[lbl.mappingName]) {
+      groups[lbl.mappingName] = [];
+    }
+    groups[lbl.mappingName].push(lbl);
+  });
+
+  // Gerar HTML do relatório
+  const today = formatDate(new Date());
+  let reportBodyHtml = '';
+
+  Object.keys(groups).forEach(mappingName => {
+    const labels = groups[mappingName];
+
+    // Identificar campo de sub-agrupamento (genética ou similar)
+    // e campo de volume/quantidade
+    const subGroupField = findSubGroupField(labels[0]);
+    const volumeField = findVolumeField(labels[0]);
+
+    reportBodyHtml += `
+      <div class="report-group">
+        <div class="report-group-header">
+          <span class="report-group-name">${escapeHtml(mappingName)}</span>
+          <span class="report-group-total">${labels.length} etiqueta(s)</span>
+        </div>`;
+
+    if (subGroupField) {
+      // Sub-agrupar por campo (ex: genética)
+      const subGroups = {};
+      labels.forEach(lbl => {
+        const key = getFieldValue(lbl, subGroupField) || '(não informado)';
+        if (!subGroups[key]) subGroups[key] = [];
+        subGroups[key].push(lbl);
+      });
+
+      Object.keys(subGroups).sort().forEach(subKey => {
+        const subLabels = subGroups[subKey];
+        let detail = `${subLabels.length} etiqueta(s)`;
+
+        // Soma volumes se houver campo de volume user_batch
+        if (volumeField) {
+          const totalVol = sumFieldValues(subLabels, volumeField);
+          if (totalVol !== null) {
+            const unit = extractUnit(getFieldValue(subLabels[0], volumeField));
+            detail = `${totalVol}${unit} (total)`;
+          }
+        }
+
+        reportBodyHtml += `
+          <div class="report-item">
+            <span class="report-item-name">${escapeHtml(subGroupField)}: ${escapeHtml(subKey)}</span>
+            <span class="report-item-detail">${detail}</span>
+          </div>`;
+      });
+    } else {
+      // Sem sub-agrupamento — mostra total direto
+      let detail = `${labels.length} unidade(s)`;
+      if (volumeField) {
+        const fixedVol = getFieldValue(labels[0], volumeField);
+        if (fixedVol) {
+          detail += ` (${escapeHtml(fixedVol)} cada)`;
+        }
+      }
+      reportBodyHtml += `
+        <div class="report-item">
+          <span class="report-item-detail">${detail}</span>
+        </div>`;
+    }
+
+    reportBodyHtml += `</div>`;
+  });
+
+  // Lista de pacientes
+  let patientsHtml = '<div class="report-group"><div class="report-group-header"><span class="report-group-name">Lista de Pacientes</span></div>';
+  App.generatedLabels.forEach((lbl, i) => {
+    patientsHtml += `
+      <div class="report-item">
+        <span class="report-item-name">${i + 1}. ${escapeHtml(lbl.addressPersonName || '-')}</span>
+        <span class="report-item-detail">${escapeHtml(lbl.mappingName)}${getFieldValue(lbl, 'genética') || getFieldValue(lbl, 'genetica') ? ' — ' + escapeHtml(getFieldValue(lbl, 'genética') || getFieldValue(lbl, 'genetica')) : ''}${getFieldValue(lbl, 'volume') ? ' — ' + escapeHtml(getFieldValue(lbl, 'volume')) : ''}</span>
+      </div>`;
+  });
+  patientsHtml += '</div>';
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório de Etiquetas</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+      color: #333;
+    }
+
+    .controls {
+      background: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .controls h2 {
+      font-size: 18px;
+      color: #333;
+      margin-right: auto;
+    }
+
+    .controls button {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-print {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-print:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-close {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .btn-close:hover {
+      background: #d1d5db;
+    }
+
+    .report-container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 32px;
+    }
+
+    .report-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .report-date {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .report-total {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2563eb;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .report-group {
+      margin-bottom: 24px;
+    }
+
+    .report-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border-left: 4px solid #2563eb;
+    }
+
+    .report-group-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .report-group-total {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2563eb;
+    }
+
+    .report-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px 8px 28px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .report-item:last-child {
+      border-bottom: none;
+    }
+
+    .report-item-name {
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .report-item-detail {
+      font-size: 14px;
+      font-weight: 600;
+      color: #059669;
+    }
+
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+      }
+      .controls {
+        display: none !important;
+      }
+      .report-container {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <h2>📊 Relatório de Etiquetas</h2>
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn-close" onclick="window.close()">✕ Fechar</button>
+  </div>
+
+  <div class="report-container">
+    <div class="report-title">Relatório de Etiquetas</div>
+    <div class="report-date">${today}</div>
+    <div class="report-total">Total: ${App.generatedLabels.length} etiqueta(s)</div>
+    ${reportBodyHtml}
+    ${patientsHtml}
+  </div>
+</body>
+</html>`;
+
+  reportWindow.document.write(html);
+  reportWindow.document.close();
+  showNotification('Relatório gerado!', 'success');
+}
+
+// === Helpers do Relatório ===
+
+function findSubGroupField(label) {
+  // Procura campo que sirva para sub-agrupar (genética, etc)
+  const subGroupLabels = ['genética', 'genetica', 'variedade', 'cepa', 'strain'];
+  for (const f of label.resolvedFields) {
+    if (subGroupLabels.includes(f.label.toLowerCase())) {
+      return f.label;
+    }
+  }
+  return null;
+}
+
+function findVolumeField(label) {
+  const volumeLabels = ['volume', 'quantidade', 'peso', 'qtd'];
+  for (const f of label.resolvedFields) {
+    if (volumeLabels.includes(f.label.toLowerCase())) {
+      return f.label;
+    }
+  }
+  return null;
+}
+
+function sumFieldValues(labels, fieldLabel) {
+  let sum = 0;
+  let found = false;
+  labels.forEach(lbl => {
+    const val = getFieldValue(lbl, fieldLabel);
+    const num = parseFloat(val.replace(/[^0-9.,]/g, '').replace(',', '.'));
+    if (!isNaN(num)) {
+      sum += num;
+      found = true;
+    }
+  });
+  return found ? sum : null;
+}
+
+function extractUnit(value) {
+  if (!value) return '';
+  const match = value.match(/[a-zA-Z%]+$/);
+  return match ? match[0] : '';
+}
+

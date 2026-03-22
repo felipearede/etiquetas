@@ -179,8 +179,33 @@ function generateLabels() {
       addressPersonName: r.row.addressPersonName || '',
       prod: r.row.prod || '',
       mappingName: m.name,
+      mappingId: m.id,
       labelSize: m.labelSize,
       resolvedFields
     });
   });
+
+  // Ordenar: primeiro por mapeamento, depois por genética (se tiver)
+  App.generatedLabels.sort((a, b) => {
+    if (a.mappingName !== b.mappingName) {
+      return a.mappingName.localeCompare(b.mappingName);
+    }
+    const genA = getFieldValue(a, 'genética') || getFieldValue(a, 'genetica') || '';
+    const genB = getFieldValue(b, 'genética') || getFieldValue(b, 'genetica') || '';
+    if (genA !== genB) {
+      return genA.localeCompare(genB);
+    }
+    // Sub-agrupar por volume também
+    const volA = getFieldValue(a, 'volume') || '';
+    const volB = getFieldValue(b, 'volume') || '';
+    return volA.localeCompare(volB);
+  });
+}
+
+// === Utilitário: buscar valor de campo por label ===
+function getFieldValue(label, fieldLabel) {
+  const field = label.resolvedFields.find(f =>
+    f.label.toLowerCase() === fieldLabel.toLowerCase()
+  );
+  return field ? field.value : '';
 }
