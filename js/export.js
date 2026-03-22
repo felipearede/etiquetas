@@ -469,16 +469,7 @@ function printReport() {
     reportBodyHtml += `</div>`;
   });
 
-  // Lista de pacientes
-  let patientsHtml = '<div class="report-group"><div class="report-group-header"><span class="report-group-name">Lista de Pacientes</span></div>';
-  App.generatedLabels.forEach((lbl, i) => {
-    patientsHtml += `
-      <div class="report-item">
-        <span class="report-item-name">${i + 1}. ${escapeHtml(lbl.addressPersonName || '-')}</span>
-        <span class="report-item-detail">${escapeHtml(lbl.mappingName)}${getFieldValue(lbl, 'genética') || getFieldValue(lbl, 'genetica') ? ' — ' + escapeHtml(getFieldValue(lbl, 'genética') || getFieldValue(lbl, 'genetica')) : ''}${getFieldValue(lbl, 'volume') ? ' — ' + escapeHtml(getFieldValue(lbl, 'volume')) : ''}</span>
-      </div>`;
-  });
-  patientsHtml += '</div>';
+
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -657,7 +648,6 @@ function printReport() {
     <div class="report-date">${today}</div>
     <div class="report-total">Total: ${App.generatedLabels.length} etiqueta(s)</div>
     ${reportBodyHtml}
-    ${patientsHtml}
   </div>
 </body>
 </html>`;
