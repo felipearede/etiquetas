@@ -110,10 +110,14 @@ function renderFillGroups() {
     // Campos preenchíveis (cada linha tem os seus)
     fillableFields.forEach(f => {
       const prevVal = App.labelInputs[r.index]?.[f.id] || '';
-      html += `<div class="form-group">
+      const datalistId = `dl_${r.index}_${f.id}`;
+      html += `<div class="form-group autocomplete-wrap">
         <label>${escapeHtml(f.label)}</label>
         <input type="text" data-row="${r.index}" data-field="${f.id}" data-input-type="label"
-               placeholder="${escapeHtml(f.placeholder || '')}" value="${escapeHtml(prevVal)}">
+               data-field-label="${escapeHtml(f.label)}"
+               placeholder="${escapeHtml(f.placeholder || '')}" value="${escapeHtml(prevVal)}"
+               list="${datalistId}" autocomplete="off" class="autocomplete-field">
+        <datalist id="${datalistId}"></datalist>
       </div>`;
     });
 
@@ -125,6 +129,38 @@ function renderFillGroups() {
   });
 
   container.innerHTML = html;
+
+  // Attach autocomplete listeners
+  setupAutocomplete(container);
+}
+
+function setupAutocomplete(container) {
+  container.querySelectorAll('.autocomplete-field').forEach(input => {
+    // Update suggestions on focus and input
+    const updateSuggestions = () => {
+      const fieldId = input.dataset.field;
+      const currentRow = input.dataset.row;
+      const values = new Set();
+
+      // Collect values from all other inputs with the same field ID
+      container.querySelectorAll(`.autocomplete-field[data-field="${fieldId}"]`).forEach(other => {
+        if (other.dataset.row !== currentRow && other.value.trim()) {
+          values.add(other.value.trim());
+        }
+      });
+
+      // Update the datalist
+      const datalist = document.getElementById(input.getAttribute('list'));
+      if (datalist) {
+        datalist.innerHTML = [...values].sort().map(v =>
+          `<option value="${escapeHtml(v)}">`
+        ).join('');
+      }
+    };
+
+    input.addEventListener('focus', updateSuggestions);
+    input.addEventListener('input', updateSuggestions);
+  });
 }
 
 function collectFillInputs() {
