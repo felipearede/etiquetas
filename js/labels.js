@@ -86,18 +86,31 @@ function renderFillGroups() {
     return;
   }
 
+  // Agrupar por mapeamento
+  const groups = {};
+  activeResults.forEach(r => {
+    const key = r.mapping.id;
+    if (!groups[key]) {
+      groups[key] = { mapping: r.mapping, items: [] };
+    }
+    groups[key].items.push(r);
+  });
+
   let html = '';
-  activeResults.forEach((r, i) => {
-    const m = r.mapping;
-    const fillableFields = m.fields.filter(f => f.type === 'user_batch' || f.type === 'user_label');
+  let globalIndex = 0;
+
+  Object.values(groups).forEach(group => {
+    const m = group.mapping;
     const autoFields = m.fields.filter(f => f.type === 'auto');
 
-    html += `<div class="fill-group">
-      <h4>#${i + 1} - ${escapeHtml(r.row.addressPersonName || 'Sem nome')}
-        <span style="font-weight:normal;font-size:13px;color:#888"> — ${escapeHtml(m.name)}</span>
-      </h4>`;
+    // Cabeçalho do grupo (produto)
+    html += `<div class="fill-product-group">
+      <div class="fill-product-header">
+        <span class="fill-product-name">${escapeHtml(m.name)}</span>
+        <span class="fill-product-count">${group.items.length} etiqueta(s)</span>
+      </div>`;
 
-    // Campos automáticos - preview
+    // Campos automáticos - preview (uma vez por grupo)
     if (autoFields.length > 0) {
       html += '<div class="auto-preview">';
       autoFields.forEach(f => {
@@ -107,23 +120,33 @@ function renderFillGroups() {
       html += '</div>';
     }
 
-    // Campos preenchíveis (cada linha tem os seus)
-    fillableFields.forEach(f => {
-      const prevVal = App.labelInputs[r.index]?.[f.id] || '';
-      const datalistId = `dl_${r.index}_${f.id}`;
-      html += `<div class="form-group autocomplete-wrap">
-        <label>${escapeHtml(f.label)}</label>
-        <input type="text" data-row="${r.index}" data-field="${f.id}" data-input-type="label"
-               data-field-label="${escapeHtml(f.label)}"
-               placeholder="${escapeHtml(f.placeholder || '')}" value="${escapeHtml(prevVal)}"
-               list="${datalistId}" autocomplete="off" class="autocomplete-field">
-        <datalist id="${datalistId}"></datalist>
-      </div>`;
-    });
+    // Cada paciente dentro do grupo
+    group.items.forEach(r => {
+      globalIndex++;
+      const fillableFields = m.fields.filter(f => f.type === 'user_batch' || f.type === 'user_label');
 
-    if (fillableFields.length === 0) {
-      html += '<p style="color:#888;font-size:13px">Todos os campos são fixos ou automáticos.</p>';
-    }
+      html += `<div class="fill-group">
+        <h4>#${globalIndex} - ${escapeHtml(r.row.addressPersonName || 'Sem nome')}</h4>`;
+
+      fillableFields.forEach(f => {
+        const prevVal = App.labelInputs[r.index]?.[f.id] || '';
+        const datalistId = `dl_${r.index}_${f.id}`;
+        html += `<div class="form-group autocomplete-wrap">
+          <label>${escapeHtml(f.label)}</label>
+          <input type="text" data-row="${r.index}" data-field="${f.id}" data-input-type="label"
+                 data-field-label="${escapeHtml(f.label)}"
+                 placeholder="${escapeHtml(f.placeholder || '')}" value="${escapeHtml(prevVal)}"
+                 list="${datalistId}" autocomplete="off" class="autocomplete-field">
+          <datalist id="${datalistId}"></datalist>
+        </div>`;
+      });
+
+      if (fillableFields.length === 0) {
+        html += '<p style="color:#888;font-size:13px">Todos os campos são fixos ou automáticos.</p>';
+      }
+
+      html += '</div>';
+    });
 
     html += '</div>';
   });

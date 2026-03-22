@@ -162,21 +162,44 @@ tr:hover { background: #f9fafb; }
 }
 
 /* Fill step groups */
+.fill-product-group {
+  margin-bottom: 24px;
+}
+.fill-product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border-left: 4px solid #2563eb;
+  margin-bottom: 12px;
+}
+.fill-product-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.fill-product-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+}
+.fill-product-group .auto-preview {
+  background: #f0fdf4;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
 .fill-group {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 .fill-group h4 { margin-bottom: 12px; font-size: 15px; }
-.fill-group .auto-preview {
-  background: #f0fdf4;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 13px;
-  margin-bottom: 8px;
-}
 
 /* Labels preview grid */
 .labels-grid {
