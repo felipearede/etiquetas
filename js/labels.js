@@ -101,6 +101,14 @@ function renderFillGroups() {
 
   Object.values(groups).forEach(group => {
     const m = group.mapping;
+    const fillableFields = m.fields.filter(f => f.type === 'user_batch' || f.type === 'user_label');
+
+    // Pular grupo se não tem campos para preencher
+    if (fillableFields.length === 0) {
+      globalIndex += group.items.length;
+      return;
+    }
+
     const autoFields = m.fields.filter(f => f.type === 'auto');
 
     // Cabeçalho do grupo (produto)
@@ -123,7 +131,6 @@ function renderFillGroups() {
     // Cada paciente dentro do grupo
     group.items.forEach(r => {
       globalIndex++;
-      const fillableFields = m.fields.filter(f => f.type === 'user_batch' || f.type === 'user_label');
 
       html += `<div class="fill-group">
         <h4>#${globalIndex} - ${escapeHtml(r.row.addressPersonName || 'Sem nome')}</h4>`;
@@ -140,10 +147,6 @@ function renderFillGroups() {
           <datalist id="${datalistId}"></datalist>
         </div>`;
       });
-
-      if (fillableFields.length === 0) {
-        html += '<p style="color:#888;font-size:13px">Todos os campos são fixos ou automáticos.</p>';
-      }
 
       html += '</div>';
     });
