@@ -137,14 +137,13 @@ function renderFillGroups() {
 
       fillableFields.forEach(f => {
         const prevVal = App.labelInputs[r.index]?.[f.id] || '';
-        const datalistId = `dl_${r.index}_${f.id}`;
         html += `<div class="form-group autocomplete-wrap">
           <label>${escapeHtml(f.label)}</label>
           <input type="text" data-row="${r.index}" data-field="${f.id}" data-input-type="label"
                  data-field-label="${escapeHtml(f.label)}"
                  placeholder="${escapeHtml(f.placeholder || '')}" value="${escapeHtml(prevVal)}"
-                 list="${datalistId}" autocomplete="off" class="autocomplete-field">
-          <datalist id="${datalistId}"></datalist>
+                 autocomplete="off" class="autocomplete-field">
+          <div class="ac-dropdown"></div>
         </div>`;
       });
 
@@ -161,31 +160,100 @@ function renderFillGroups() {
 }
 
 function setupAutocomplete(container) {
+  let activeDropdown = null;
+
+  function closeAllDropdowns() {
+    container.querySelectorAll('.ac-dropdown.ac-open').forEach(d => {
+      d.classList.remove('ac-open');
+      d.innerHTML = '';
+    });
+    activeDropdown = null;
+  }
+
   container.querySelectorAll('.autocomplete-field').forEach(input => {
-    // Update suggestions on focus and input
-    const updateSuggestions = () => {
+    const dropdown = input.nextElementSibling;
+    let selectedIdx = -1;
+
+    function getSuggestions() {
       const fieldId = input.dataset.field;
       const currentRow = input.dataset.row;
+      const typed = input.value.toLowerCase().trim();
       const values = new Set();
 
-      // Collect values from all other inputs with the same field ID
       container.querySelectorAll(`.autocomplete-field[data-field="${fieldId}"]`).forEach(other => {
         if (other.dataset.row !== currentRow && other.value.trim()) {
           values.add(other.value.trim());
         }
       });
 
-      // Update the datalist
-      const datalist = document.getElementById(input.getAttribute('list'));
-      if (datalist) {
-        datalist.innerHTML = [...values].sort().map(v =>
-          `<option value="${escapeHtml(v)}">`
-        ).join('');
-      }
-    };
+      return [...values].filter(v =>
+        !typed || v.toLowerCase().includes(typed)
+      ).sort();
+    }
 
-    input.addEventListener('focus', updateSuggestions);
-    input.addEventListener('input', updateSuggestions);
+    function showDropdown() {
+      const suggestions = getSuggestions();
+      if (suggestions.length === 0) {
+        closeAllDropdowns();
+        return;
+      }
+
+      selectedIdx = -1;
+      dropdown.innerHTML = suggestions.map((v, i) =>
+        `<div class="ac-item" data-index="${i}">${escapeHtml(v)}</div>`
+      ).join('');
+      dropdown.classList.add('ac-open');
+      activeDropdown = dropdown;
+
+      // Click handler for items
+      dropdown.querySelectorAll('.ac-item').forEach(item => {
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          input.value = item.textContent;
+          closeAllDropdowns();
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      });
+    }
+
+    input.addEventListener('input', showDropdown);
+    input.addEventListener('focus', showDropdown);
+
+    input.addEventListener('blur', () => {
+      setTimeout(closeAllDropdowns, 150);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (!dropdown.classList.contains('ac-open')) return;
+      const items = dropdown.querySelectorAll('.ac-item');
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIdx = Math.min(selectedIdx + 1, items.length - 1);
+        items.forEach((it, i) => it.classList.toggle('ac-active', i === selectedIdx));
+        items[selectedIdx].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIdx = Math.max(selectedIdx - 1, 0);
+        items.forEach((it, i) => it.classList.toggle('ac-active', i === selectedIdx));
+        items[selectedIdx].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter' && selectedIdx >= 0) {
+        e.preventDefault();
+        input.value = items[selectedIdx].textContent;
+        closeAllDropdowns();
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      } else if (e.key === 'Escape') {
+        closeAllDropdowns();
+      }
+    });
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('autocomplete-field')) {
+      closeAllDropdowns();
+    }
   });
 }
 
