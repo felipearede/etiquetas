@@ -407,7 +407,7 @@ function printReport() {
 
     if (genetica) {
       // Tem genética → agrupar por nome da genética
-      const key = genetica;
+      const key = genetica.trim();
       if (!flatGroups[key]) {
         flatGroups[key] = { name: key, labels: [], type: 'genetica', volumeField };
       }

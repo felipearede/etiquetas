@@ -313,9 +313,8 @@ function generateLabels() {
 
       // THC IN NATURA: se Volume for só número, adicionar "g"
       if (value && normalizeStr(label) === 'volume' && /^\s*\d+[\.,]?\d*\s*$/.test(value)) {
-        const isThc = m.fields.some(field =>
-          field.type === 'fixed' && field.value && field.value.toUpperCase().includes('THC IN NATURA')
-        );
+        const isThc = (m.name && m.name.toUpperCase().includes('THC') && m.name.toUpperCase().includes('NATURA')) ||
+          m.fields.some(field => field.value && field.value.toUpperCase().includes('THC IN NATURA'));
         if (isThc) {
           value = value.trim() + 'g';
         }
