@@ -432,15 +432,26 @@ function printReport() {
     const labelCount = group.labels.length;
     let quantityText = '';
 
-    if (group.type === 'genetica' && group.volumeField) {
-      // Somar peso/volume total
-      const totalVol = sumFieldValues(group.labels, group.volumeField);
-      if (totalVol !== null) {
-        const unit = extractUnit(getFieldValue(group.labels[0], group.volumeField));
-        quantityText = `${totalVol}${unit}`;
-      } else {
-        quantityText = `${labelCount} unidade(s)`;
-      }
+    if (group.type === 'genetica') {
+      // Somar peso/volume total — busca campo de volume em CADA etiqueta individualmente
+      let totalVol = 0;
+      let foundAny = false;
+      let unit = '';
+
+      group.labels.forEach(lbl => {
+        const volFieldLabel = findVolumeField(lbl);
+        if (volFieldLabel) {
+          const val = getFieldValue(lbl, volFieldLabel);
+          const num = parseFloat(val.replace(/[^0-9.,]/g, '').replace(',', '.'));
+          if (!isNaN(num)) {
+            totalVol += num;
+            foundAny = true;
+            if (!unit) unit = extractUnit(val);
+          }
+        }
+      });
+
+      quantityText = foundAny ? `${totalVol}${unit}` : `${labelCount} unidade(s)`;
     } else {
       quantityText = `${labelCount} unidade(s)`;
     }
