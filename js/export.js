@@ -433,10 +433,6 @@ function printReport() {
     let quantityText = '';
     let isWeight = false;
 
-    console.log('Relatório - grupo:', group.name, 'type:', group.type, 'labels:', group.labels.map(l => ({
-      mapping: l.mappingName,
-      fields: l.resolvedFields.map(f => (f.label || '(sem label)') + ' = ' + f.value)
-    })));
 
     if (group.type === 'genetica') {
       let totalVol = 0;
