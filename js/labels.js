@@ -175,12 +175,12 @@ function setupAutocomplete(container) {
     let selectedIdx = -1;
 
     function getSuggestions() {
-      const fieldId = input.dataset.field;
+      const fieldLabel = input.dataset.fieldLabel;
       const currentRow = input.dataset.row;
       const typed = input.value.toLowerCase().trim();
       const values = new Set();
 
-      container.querySelectorAll(`.autocomplete-field[data-field="${fieldId}"]`).forEach(other => {
+      container.querySelectorAll(`.autocomplete-field[data-field-label="${fieldLabel}"]`).forEach(other => {
         if (other.dataset.row !== currentRow && other.value.trim()) {
           values.add(other.value.trim());
         }
