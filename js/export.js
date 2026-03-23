@@ -426,20 +426,19 @@ function printReport() {
   const today = formatDate(new Date());
   let reportBodyHtml = '';
 
-  // Ordenar por nome
-  Object.keys(flatGroups).sort().forEach(key => {
+  // Calcular quantidade de cada grupo
+  const reportItems = Object.keys(flatGroups).sort().map(key => {
     const group = flatGroups[key];
     const labelCount = group.labels.length;
     let quantityText = '';
+    let isWeight = false;
 
-    // Debug: mostra campos de cada etiqueta no console (abrir DevTools F12)
     console.log('Relatório - grupo:', group.name, 'type:', group.type, 'labels:', group.labels.map(l => ({
       mapping: l.mappingName,
       fields: l.resolvedFields.map(f => (f.label || '(sem label)') + ' = ' + f.value)
     })));
 
     if (group.type === 'genetica') {
-      // Somar peso/volume total de todas etiquetas com mesma genética
       let totalVol = 0;
       let foundAny = false;
       let unit = '';
@@ -448,7 +447,6 @@ function printReport() {
         const val = getVolumeValue(lbl);
         if (val) {
           const u = extractUnit(val).toLowerCase();
-          // ml/l → contar como unidade, não somar volume
           if (u === 'ml' || u === 'l') return;
           const num = parseFloat(val.replace(/[^0-9.,]/g, '').replace(',', '.'));
           if (!isNaN(num)) {
@@ -459,16 +457,31 @@ function printReport() {
         }
       });
 
-      quantityText = foundAny ? `${totalVol}${unit}` : `${labelCount} unidade(s)`;
+      if (foundAny) {
+        quantityText = `${totalVol}${unit}`;
+        isWeight = true;
+      } else {
+        quantityText = `${labelCount} unidade(s)`;
+      }
     } else {
       quantityText = `${labelCount} unidade(s)`;
     }
 
+    return { name: group.name, quantityText, labelCount, isWeight };
+  });
+
+  // Ordenar: unidades primeiro, depois gramas/kg — alfabético dentro de cada grupo
+  reportItems.sort((a, b) => {
+    if (a.isWeight !== b.isWeight) return a.isWeight ? 1 : -1;
+    return a.name.localeCompare(b.name);
+  });
+
+  reportItems.forEach(item => {
     reportBodyHtml += `
       <div class="report-item">
-        <span class="report-item-name">${escapeHtml(group.name)}</span>
-        <span class="report-item-quantity">${quantityText}</span>
-        <span class="report-item-detail">${labelCount} etiqueta(s)</span>
+        <span class="report-item-name">${escapeHtml(item.name)}</span>
+        <span class="report-item-quantity">${item.quantityText}</span>
+        <span class="report-item-detail">${item.labelCount} etiqueta(s)</span>
       </div>`;
   });
 
