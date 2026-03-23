@@ -166,6 +166,7 @@ function renderFillGroups() {
 
 function setupAutocomplete(container) {
   let activeDropdown = null;
+  let closeTimer = null;
 
   function closeAllDropdowns() {
     container.querySelectorAll('.ac-dropdown.ac-open').forEach(d => {
@@ -197,6 +198,12 @@ function setupAutocomplete(container) {
     }
 
     function showDropdown() {
+      // Cancel any pending close timer
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+
       const suggestions = getSuggestions();
       if (suggestions.length === 0) {
         closeAllDropdowns();
@@ -224,7 +231,7 @@ function setupAutocomplete(container) {
     input.addEventListener('focus', showDropdown);
 
     input.addEventListener('blur', () => {
-      setTimeout(closeAllDropdowns, 150);
+      closeTimer = setTimeout(closeAllDropdowns, 150);
     });
 
     input.addEventListener('keydown', (e) => {
