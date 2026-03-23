@@ -216,7 +216,6 @@ function setupAutocomplete(container) {
           e.preventDefault();
           input.value = item.textContent;
           closeAllDropdowns();
-          input.dispatchEvent(new Event('input', { bubbles: true }));
         });
       });
     }
@@ -247,7 +246,6 @@ function setupAutocomplete(container) {
         e.preventDefault();
         input.value = items[selectedIdx].textContent;
         closeAllDropdowns();
-        input.dispatchEvent(new Event('input', { bubbles: true }));
       } else if (e.key === 'Escape') {
         closeAllDropdowns();
       }
