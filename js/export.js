@@ -432,21 +432,24 @@ function printReport() {
     const labelCount = group.labels.length;
     let quantityText = '';
 
+    // Debug: mostra campos de cada etiqueta no console (abrir DevTools F12)
+    console.log('Relatório - grupo:', group.name, 'type:', group.type, 'labels:', group.labels.map(l => ({
+      mapping: l.mappingName,
+      fields: l.resolvedFields.map(f => (f.label || '(sem label)') + ' = ' + f.value)
+    })));
+
     if (group.type === 'genetica') {
-      // Somar peso/volume total — busca campo de volume em CADA etiqueta individualmente
+      // Somar peso/volume total de todas etiquetas com mesma genética
       let totalVol = 0;
       let foundAny = false;
       let unit = '';
 
       group.labels.forEach(lbl => {
-        // Busca valor de volume tentando cada nome possível (com normalização completa via getFieldValue)
-        const volumeLabels = ['volume', 'quantidade', 'peso', 'qtd'];
-        let val = '';
-        for (const vl of volumeLabels) {
-          val = getFieldValue(lbl, vl);
-          if (val) break;
-        }
+        const val = getVolumeValue(lbl);
         if (val) {
+          const u = extractUnit(val).toLowerCase();
+          // ml/l → contar como unidade, não somar volume
+          if (u === 'ml' || u === 'l') return;
           const num = parseFloat(val.replace(/[^0-9.,]/g, '').replace(',', '.'));
           if (!isNaN(num)) {
             totalVol += num;
@@ -657,6 +660,22 @@ function findSubGroupField(label) {
     }
   }
   return null;
+}
+
+function getVolumeValue(lbl) {
+  // 1) Tentar por nome do campo (com normalização completa)
+  const volumeLabels = ['volume', 'quantidade', 'peso', 'qtd'];
+  for (const vl of volumeLabels) {
+    const val = getFieldValue(lbl, vl);
+    if (val && /\d/.test(val)) return val;
+  }
+  // 2) Fallback: escanear todos os campos por valor que pareça volume/peso
+  for (const f of lbl.resolvedFields) {
+    if (f.value && /^\s*\d+[\.,]?\d*\s*(g|kg|mg|ml|l)\s*$/i.test(f.value)) {
+      return f.value;
+    }
+  }
+  return '';
 }
 
 function findVolumeField(label) {
