@@ -439,9 +439,14 @@ function printReport() {
       let unit = '';
 
       group.labels.forEach(lbl => {
-        const volFieldLabel = findVolumeField(lbl);
-        if (volFieldLabel) {
-          const val = getFieldValue(lbl, volFieldLabel);
+        // Busca valor de volume tentando cada nome possível (com normalização completa via getFieldValue)
+        const volumeLabels = ['volume', 'quantidade', 'peso', 'qtd'];
+        let val = '';
+        for (const vl of volumeLabels) {
+          val = getFieldValue(lbl, vl);
+          if (val) break;
+        }
+        if (val) {
           const num = parseFloat(val.replace(/[^0-9.,]/g, '').replace(',', '.'));
           if (!isNaN(num)) {
             totalVol += num;
@@ -657,7 +662,7 @@ function findSubGroupField(label) {
 function findVolumeField(label) {
   const volumeLabels = ['volume', 'quantidade', 'peso', 'qtd'];
   for (const f of label.resolvedFields) {
-    if (volumeLabels.includes(f.label.toLowerCase())) {
+    if (volumeLabels.includes(normalizeStr(f.label))) {
       return f.label;
     }
   }
