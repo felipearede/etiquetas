@@ -135,12 +135,17 @@ function renderFillGroups() {
       html += `<div class="fill-group">
         <h4>#${globalIndex} - ${escapeHtml(r.row.addressPersonName || 'Sem nome')}</h4>`;
 
+      // Simple normalizer to ignore accents, case, and special chars (e.g "GENÉTICA" -> "genetica")
+      const normalizeFieldLabel = (lbl) => lbl.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
       fillableFields.forEach(f => {
         const prevVal = App.labelInputs[r.index]?.[f.id] || '';
+        const normLabel = normalizeFieldLabel(f.label);
         html += `<div class="form-group autocomplete-wrap">
           <label>${escapeHtml(f.label)}</label>
           <input type="text" data-row="${r.index}" data-field="${f.id}" data-input-type="label"
                  data-field-label="${escapeHtml(f.label)}"
+                 data-field-norm="${normLabel}"
                  placeholder="${escapeHtml(f.placeholder || '')}" value="${escapeHtml(prevVal)}"
                  autocomplete="off" class="autocomplete-field">
           <div class="ac-dropdown"></div>
@@ -175,12 +180,12 @@ function setupAutocomplete(container) {
     let selectedIdx = -1;
 
     function getSuggestions() {
-      const fieldLabel = input.dataset.fieldLabel;
+      const fieldNorm = input.dataset.fieldNorm;
       const currentRow = input.dataset.row;
       const typed = input.value.toLowerCase().trim();
       const values = new Set();
 
-      container.querySelectorAll(`.autocomplete-field[data-field-label="${fieldLabel}"]`).forEach(other => {
+      container.querySelectorAll(`.autocomplete-field[data-field-norm="${fieldNorm}"]`).forEach(other => {
         if (other.dataset.row !== currentRow && other.value.trim()) {
           values.add(other.value.trim());
         }
