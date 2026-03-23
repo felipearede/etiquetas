@@ -311,6 +311,16 @@ function generateLabels() {
         value = App.labelInputs[r.index]?.[f.id] || '';
       }
 
+      // THC IN NATURA: se Volume for só número, adicionar "g"
+      if (value && normalizeStr(label) === 'volume' && /^\s*\d+[\.,]?\d*\s*$/.test(value)) {
+        const isThc = m.fields.some(field =>
+          field.type === 'fixed' && field.value && field.value.toUpperCase().includes('THC IN NATURA')
+        );
+        if (isThc) {
+          value = value.trim() + 'g';
+        }
+      }
+
       return { label, value };
     });
 
