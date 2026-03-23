@@ -14,14 +14,11 @@ function renderLabelPreviews() {
 
   App.generatedLabels.forEach((lbl, i) => {
     // Inserir cabeçalho de grupo quando muda a genética
-    const currentGenetica = getFieldValue(lbl, 'genética') || getFieldValue(lbl, 'genetica') || '';
+    const currentGenetica = getGeneticaValue(lbl);
     const displayGenetica = currentGenetica || '(sem genética)';
 
     if (currentGenetica !== lastGenetica) {
-      const groupCount = App.generatedLabels.filter(l => {
-        const g = getFieldValue(l, 'genética') || getFieldValue(l, 'genetica') || '';
-        return g === currentGenetica;
-      }).length;
+      const groupCount = App.generatedLabels.filter(l => getGeneticaValue(l) === currentGenetica).length;
       html += `<div class="group-header">
         <span class="group-header-name">🧬 ${escapeHtml(displayGenetica)}</span>
         <span class="group-header-count">${groupCount} etiqueta(s)</span>

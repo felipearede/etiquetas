@@ -327,8 +327,8 @@ function generateLabels() {
 
   // Ordenar: primeiro por genética (agrupa todas iguais juntas), depois por mapeamento, depois por volume
   App.generatedLabels.sort((a, b) => {
-    const genA = getFieldValue(a, 'genética') || getFieldValue(a, 'genetica') || '';
-    const genB = getFieldValue(b, 'genética') || getFieldValue(b, 'genetica') || '';
+    const genA = getGeneticaValue(a);
+    const genB = getGeneticaValue(b);
     if (genA !== genB) {
       return genA.localeCompare(genB);
     }
@@ -340,12 +340,34 @@ function generateLabels() {
     const volB = getFieldValue(b, 'volume') || '';
     return volA.localeCompare(volB);
   });
+
+  console.log('Labels ordenadas por genética:', App.generatedLabels.map(l => ({
+    nome: l.addressPersonName,
+    genetica: getGeneticaValue(l),
+    produto: l.mappingName
+  })));
 }
 
-// === Utilitário: buscar valor de campo por label ===
+// === Utilitário: normalizar string removendo acentos ===
+function normalizeStr(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+// === Utilitário: buscar valor de campo por label (com normalização de acentos) ===
 function getFieldValue(label, fieldLabel) {
+  const normSearch = normalizeStr(fieldLabel);
   const field = label.resolvedFields.find(f =>
-    f.label.toLowerCase() === fieldLabel.toLowerCase()
+    normalizeStr(f.label) === normSearch
   );
   return field ? field.value : '';
+}
+
+// === Utilitário: buscar valor de genética independente do nome do campo ===
+function getGeneticaValue(label) {
+  const geneticaLabels = ['genetica', 'genética', 'variedade', 'cepa', 'strain'];
+  for (const gl of geneticaLabels) {
+    const val = getFieldValue(label, gl);
+    if (val) return val;
+  }
+  return '';
 }
