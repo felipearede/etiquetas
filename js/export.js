@@ -398,82 +398,59 @@ function printReport() {
     return;
   }
 
-  // Agrupar etiquetas por mapeamento
-  const groups = {};
+  // Agrupar tudo em lista plana: por genética (flores) ou por nome do produto (óleos)
+  const flatGroups = {};
+
   App.generatedLabels.forEach(lbl => {
-    if (!groups[lbl.mappingName]) {
-      groups[lbl.mappingName] = [];
+    const genetica = getGeneticaValue(lbl);
+    const volumeField = findVolumeField(lbl);
+
+    if (genetica) {
+      // Tem genética → agrupar por nome da genética
+      const key = genetica;
+      if (!flatGroups[key]) {
+        flatGroups[key] = { name: key, labels: [], type: 'genetica', volumeField };
+      }
+      flatGroups[key].labels.push(lbl);
+    } else {
+      // Sem genética (óleo, etc) → agrupar por nome do mapeamento/produto
+      const key = lbl.mappingName;
+      if (!flatGroups[key]) {
+        flatGroups[key] = { name: key, labels: [], type: 'produto', volumeField };
+      }
+      flatGroups[key].labels.push(lbl);
     }
-    groups[lbl.mappingName].push(lbl);
   });
 
   // Gerar HTML do relatório
   const today = formatDate(new Date());
   let reportBodyHtml = '';
 
-  Object.keys(groups).forEach(mappingName => {
-    const labels = groups[mappingName];
+  // Ordenar por nome
+  Object.keys(flatGroups).sort().forEach(key => {
+    const group = flatGroups[key];
+    const labelCount = group.labels.length;
+    let quantityText = '';
 
-    // Identificar campo de sub-agrupamento (genética ou similar)
-    // e campo de volume/quantidade
-    const subGroupField = findSubGroupField(labels[0]);
-    const volumeField = findVolumeField(labels[0]);
-
-    reportBodyHtml += `
-      <div class="report-group">
-        <div class="report-group-header">
-          <span class="report-group-name">${escapeHtml(mappingName)}</span>
-          <span class="report-group-total">${labels.length} etiqueta(s)</span>
-        </div>`;
-
-    if (subGroupField) {
-      // Sub-agrupar por campo (ex: genética)
-      const subGroups = {};
-      labels.forEach(lbl => {
-        const key = getFieldValue(lbl, subGroupField) || '(não informado)';
-        if (!subGroups[key]) subGroups[key] = [];
-        subGroups[key].push(lbl);
-      });
-
-      Object.keys(subGroups).sort().forEach(subKey => {
-        const subLabels = subGroups[subKey];
-        const unitCount = subLabels.length;
-        let detailParts = [];
-
-        // Soma volumes se houver campo de volume
-        if (volumeField) {
-          const totalVol = sumFieldValues(subLabels, volumeField);
-          if (totalVol !== null) {
-            const unit = extractUnit(getFieldValue(subLabels[0], volumeField));
-            detailParts.push(`${totalVol}${unit} (total)`);
-          }
-        }
-
-        detailParts.push(`${unitCount} unid.`);
-        const detail = detailParts.join(' | ');
-
-        reportBodyHtml += `
-          <div class="report-item">
-            <span class="report-item-name">${escapeHtml(subGroupField)}: ${escapeHtml(subKey)}</span>
-            <span class="report-item-detail">${detail}</span>
-          </div>`;
-      });
-    } else {
-      // Sem sub-agrupamento — mostra total direto
-      let detail = `${labels.length} unidade(s)`;
-      if (volumeField) {
-        const fixedVol = getFieldValue(labels[0], volumeField);
-        if (fixedVol) {
-          detail += ` (${escapeHtml(fixedVol)} cada)`;
-        }
+    if (group.type === 'genetica' && group.volumeField) {
+      // Somar peso/volume total
+      const totalVol = sumFieldValues(group.labels, group.volumeField);
+      if (totalVol !== null) {
+        const unit = extractUnit(getFieldValue(group.labels[0], group.volumeField));
+        quantityText = `${totalVol}${unit}`;
+      } else {
+        quantityText = `${labelCount} unidade(s)`;
       }
-      reportBodyHtml += `
-        <div class="report-item">
-          <span class="report-item-detail">${detail}</span>
-        </div>`;
+    } else {
+      quantityText = `${labelCount} unidade(s)`;
     }
 
-    reportBodyHtml += `</div>`;
+    reportBodyHtml += `
+      <div class="report-item">
+        <span class="report-item-name">${escapeHtml(group.name)}</span>
+        <span class="report-item-quantity">${quantityText}</span>
+        <span class="report-item-detail">${labelCount} etiqueta(s)</span>
+      </div>`;
   });
 
 
@@ -577,39 +554,16 @@ function printReport() {
       border-bottom: 2px solid #e5e7eb;
     }
 
-    .report-group {
-      margin-bottom: 24px;
-    }
-
-    .report-group-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 16px;
-      background: #f1f5f9;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      border-left: 4px solid #2563eb;
-    }
-
-    .report-group-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: #1e293b;
-    }
-
-    .report-group-total {
-      font-size: 14px;
-      font-weight: 600;
-      color: #2563eb;
-    }
-
     .report-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 16px 8px 28px;
+      padding: 12px 16px;
       border-bottom: 1px solid #f1f5f9;
+      border-left: 4px solid #2563eb;
+      margin-bottom: 4px;
+      background: #f8fafc;
+      border-radius: 6px;
     }
 
     .report-item:last-child {
@@ -617,14 +571,26 @@ function printReport() {
     }
 
     .report-item-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      flex: 1;
+    }
+
+    .report-item-quantity {
       font-size: 14px;
-      color: #374151;
+      font-weight: 600;
+      color: #2563eb;
+      min-width: 120px;
+      text-align: center;
     }
 
     .report-item-detail {
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
       color: #059669;
+      min-width: 100px;
+      text-align: right;
     }
 
     @media print {
