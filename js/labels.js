@@ -318,15 +318,15 @@ function generateLabels() {
     });
   });
 
-  // Ordenar: primeiro por mapeamento, depois por genética (se tiver)
+  // Ordenar: primeiro por genética (agrupa todas iguais juntas), depois por mapeamento, depois por volume
   App.generatedLabels.sort((a, b) => {
-    if (a.mappingName !== b.mappingName) {
-      return a.mappingName.localeCompare(b.mappingName);
-    }
     const genA = getFieldValue(a, 'genética') || getFieldValue(a, 'genetica') || '';
     const genB = getFieldValue(b, 'genética') || getFieldValue(b, 'genetica') || '';
     if (genA !== genB) {
       return genA.localeCompare(genB);
+    }
+    if (a.mappingName !== b.mappingName) {
+      return a.mappingName.localeCompare(b.mappingName);
     }
     // Sub-agrupar por volume também
     const volA = getFieldValue(a, 'volume') || '';

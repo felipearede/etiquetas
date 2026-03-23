@@ -10,17 +10,23 @@ function renderLabelPreviews() {
   }
 
   let html = '';
-  let lastMappingName = null;
+  let lastGenetica = null;
 
   App.generatedLabels.forEach((lbl, i) => {
-    // Inserir cabeçalho de grupo quando muda o mapeamento
-    if (lbl.mappingName !== lastMappingName) {
-      const groupCount = App.generatedLabels.filter(l => l.mappingName === lbl.mappingName).length;
+    // Inserir cabeçalho de grupo quando muda a genética
+    const currentGenetica = getFieldValue(lbl, 'genética') || getFieldValue(lbl, 'genetica') || '';
+    const displayGenetica = currentGenetica || '(sem genética)';
+
+    if (currentGenetica !== lastGenetica) {
+      const groupCount = App.generatedLabels.filter(l => {
+        const g = getFieldValue(l, 'genética') || getFieldValue(l, 'genetica') || '';
+        return g === currentGenetica;
+      }).length;
       html += `<div class="group-header">
-        <span class="group-header-name">${escapeHtml(lbl.mappingName)}</span>
+        <span class="group-header-name">🧬 ${escapeHtml(displayGenetica)}</span>
         <span class="group-header-count">${groupCount} etiqueta(s)</span>
       </div>`;
-      lastMappingName = lbl.mappingName;
+      lastGenetica = currentGenetica;
     }
 
     const fieldsHtml = lbl.resolvedFields.map(f => {
@@ -38,7 +44,7 @@ function renderLabelPreviews() {
 
     html += `<div class="label-card">
       <div class="label-header">#${i + 1} - ${escapeHtml(lbl.addressPersonName)}</div>
-      <div class="label-size">${lbl.labelSize.width}x${lbl.labelSize.height}mm</div>
+      <div class="label-size">${lbl.labelSize.width}x${lbl.labelSize.height}mm · ${escapeHtml(lbl.mappingName)}</div>
       ${fieldsHtml}
     </div>`;
   });
@@ -434,16 +440,20 @@ function printReport() {
 
       Object.keys(subGroups).sort().forEach(subKey => {
         const subLabels = subGroups[subKey];
-        let detail = `${subLabels.length} etiqueta(s)`;
+        const unitCount = subLabels.length;
+        let detailParts = [];
 
-        // Soma volumes se houver campo de volume user_batch
+        // Soma volumes se houver campo de volume
         if (volumeField) {
           const totalVol = sumFieldValues(subLabels, volumeField);
           if (totalVol !== null) {
             const unit = extractUnit(getFieldValue(subLabels[0], volumeField));
-            detail = `${totalVol}${unit} (total)`;
+            detailParts.push(`${totalVol}${unit} (total)`);
           }
         }
+
+        detailParts.push(`${unitCount} unid.`);
+        const detail = detailParts.join(' | ');
 
         reportBodyHtml += `
           <div class="report-item">
@@ -660,8 +670,8 @@ function printReport() {
 // === Helpers do Relatório ===
 
 function findSubGroupField(label) {
-  // Procura campo que sirva para sub-agrupar (genética, etc)
-  const subGroupLabels = ['genética', 'genetica', 'variedade', 'cepa', 'strain'];
+  // Procura campo que sirva para sub-agrupar (genética, concentração, etc)
+  const subGroupLabels = ['genética', 'genetica', 'variedade', 'cepa', 'strain', 'concentração', 'concentracao'];
   for (const f of label.resolvedFields) {
     if (subGroupLabels.includes(f.label.toLowerCase())) {
       return f.label;
