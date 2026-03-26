@@ -31,7 +31,10 @@
       "Bash(vercel --prod --yes)",
       "Bash(curl -s \"https://etiquetas-seven.vercel.app/api/mappings\")",
       "Bash(curl -s -X POST \"https://etiquetas-seven.vercel.app/api/mappings\" -H \"Content-Type: application/json\" -d @\"C:/Users/feare/Desktop/programacao/etiquetas/mappings.json\")",
-      "Bash(git add js/mappings.js)"
+      "Bash(git add js/mappings.js)",
+      "Bash(find C:UsersfeareDesktopprogramacaoetiquetas -type f \\\\\\(-name *.html -o -name *.json \\\\\\))",
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ]
   }
 }

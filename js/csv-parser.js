@@ -83,20 +83,8 @@ function handleFileUpload(file) {
         return n;
       });
 
-      // Deduplicar: mesmo paciente + produto = manter apenas 1
-      const beforeCount = App.csvRows.length;
-      const seen = new Set();
-      App.csvRows = App.csvRows.filter(row => {
-        const key = `${(row.addressPersonName || '').toLowerCase().trim()}||${(row.prod || '').toLowerCase().trim()}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-      const removed = beforeCount - App.csvRows.length;
-
       renderCSVTable();
-      const msg = `${App.csvRows.length} linhas carregadas` +
-        (removed > 0 ? ` (${removed} duplicata(s) removida(s))` : '');
+      const msg = `${App.csvRows.length} linhas carregadas`;
       showNotification(msg, 'success');
     },
     error: (err) => {
