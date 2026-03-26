@@ -228,6 +228,14 @@ function printLabels() {
       width: 100%;
     }
 
+    .field-nome .field-value {
+      font-size: 2.4mm;
+      white-space: nowrap;
+      overflow: hidden;
+      display: inline-block;
+      max-width: 100%;
+    }
+
     .etiqueta-footer {
       border-top: 0.3px solid #ccc;
       padding-top: 0.5mm;
@@ -317,6 +325,19 @@ function printLabels() {
 
     // Auto-abre o alerta de confirmação quando a página carrega
     window.addEventListener('load', function() {
+      // Auto-fit nomes longos de pacientes
+      document.querySelectorAll('.field-nome .field-value').forEach(function(el) {
+        var container = el.closest('.etiqueta');
+        if (!container) return;
+        var maxWidth = container.clientWidth - 24; // padding de 2mm cada lado ≈ ~8px + label width
+        var labelEl = el.previousElementSibling;
+        if (labelEl) maxWidth -= labelEl.offsetWidth + 4;
+        if (el.scrollWidth > maxWidth && maxWidth > 0) {
+          var scale = maxWidth / el.scrollWidth;
+          el.style.transform = 'scaleX(' + Math.max(scale, 0.5) + ')';
+          el.style.transformOrigin = 'left center';
+        }
+      });
       setTimeout(confirmarImpressao, 500);
     });
   </script>
